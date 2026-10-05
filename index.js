@@ -11,18 +11,31 @@ const History = require("./models/History")
 const app = express()
 
 // ১. CORS কনফিগারেশন (একদম শুরুতে)
+// সব অরিজিন এলাও করতে:
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://ai-text-summarizer-frontend-rho.vercel.app", // 👈 আপনার আসল Vercel লাইভ লিঙ্কটি দিন (শেষে যেন স্ল্যাশ '/' না থাকে)
+]
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      // Postman বা মোবাইল অ্যাপের জন্য (!origin) চেক
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error("CORS policy violation"))
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 )
 
 // ২. Body Parser
 app.use(express.json())
-console.log("URI:", process.env.MONGO_URI)
-// ৩. MongoDB Connection
-// async/await দিয়ে standard কানেকশন কোড
+
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI)
