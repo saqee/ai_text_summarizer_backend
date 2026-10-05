@@ -75,7 +75,7 @@ app.post("/api/summarize", async (req, res) => {
           content: `Summarize this text concisely:\n\n${text}`,
         },
       ],
-      model: "llama-3.1-8b-instant",
+      model: "openai/gpt-oss-20b",
     })
 
     const summary = chatCompletion.choices[0]?.message?.content?.trim() || ""
