@@ -17,7 +17,6 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g., Postman, server-to-server)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
@@ -30,7 +29,7 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
-app.options("*", cors(corsOptions)) // Explicitly handle preflight requests
+// NOTE: app.options("*", ...) is removed to prevent path-to-regexp crashes in Express 5
 
 // 2. Parsers
 app.use(express.json())
@@ -42,7 +41,7 @@ const connectDB = async () => {
     console.log("MongoDB Connected")
   } catch (error) {
     console.error("DB Connection Error:", error.message)
-    process.exit(1) // Stop the server if DB fails
+    process.exit(1)
   }
 }
 connectDB()
@@ -69,8 +68,7 @@ app.post("/api/summarize", async (req, res) => {
       messages: [
         {
           role: "system",
-          content:
-            "You are an assistant that summarizes text clearly and concisely.",
+          content: "You are an assistant that summarizes text clearly and concisely.",
         },
         {
           role: "user",
@@ -90,18 +88,14 @@ app.post("/api/summarize", async (req, res) => {
     res.status(201).json(newEntry)
   } catch (error) {
     console.error("Groq API error:", error.message)
-    res
-      .status(500)
-      .json({ error: error.message || "Failed to generate summary" })
+    res.status(500).json({ error: error.message || "Failed to generate summary" })
   }
 })
 
-// 5. Global Error Handler (Catches CORS and uncaught middleware errors)
+// 5. Global Error Handler
 app.use((err, req, res, next) => {
   if (err.message === "Not allowed by CORS") {
-    return res
-      .status(403)
-      .json({ error: "CORS policy restriction: Access denied" })
+    return res.status(403).json({ error: "CORS policy restriction: Access denied" })
   }
   res.status(500).json({ error: "Internal Server Error" })
 })
